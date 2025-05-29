@@ -2,6 +2,7 @@
 <html>
 <head>
     <title>Guess the Song</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- No external CSS or JS -->
     <style>
         body {
@@ -17,7 +18,9 @@
         button {
             padding: 10px 30px;
             font-size: 16px;
-            cursor: pointer;
+            cursor: pointer !important;
+            color: inherit !important;
+            -webkit-tap-highlight-color: transparent;
         }
         input {
             padding: 10px;
