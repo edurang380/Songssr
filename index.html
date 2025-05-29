@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Guess the Song</title>
+    <!-- No external CSS or JS -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 50px;
+        }
+        .timer {
+            font-size: 24px;
+            margin: 10px 0;
+            font-family: monospace; /* For consistent digit width */
+        }
+        button {
+            padding: 10px 30px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        input {
+            padding: 10px;
+            font-size: 16px;
+            width: 300px;
+            text-align: center;
+            margin-top: 10px;
+        }
+        #songGuess::placeholder{
+            font-family: Arial, sans-serif; /* Monospace font */
+            color: #000000; /* Light red/pink */
+            opacity: 1; /* Full visibility (no fade) */
+            font-style: bold;
+        }
+
+    </style>
+</head>
+<body style="background-color:antiquewhite">
+    <div style="text-align: center; margin-top: 50px;">
+        <!-- Blurred Image (using HTML-only hack) -->
+        <img
+            src="assets/man.png" 
+            style="filter: blur(5px); width: 200px; height: 200px;" 
+            alt="Blurred album cover"
+        >
+
+        <!-- Blurred Song Title (inline CSS) -->
+        <p style="font-size: 20px; margin: 10px 0; filter:blur(5px)">
+            Perfect Man
+        </p>
+
+        <!-- Timer display -->
+        <div class="timer">0.000s</div>
+
+
+
+        <!-- Play Button (default browser style) -->
+        <button id="playButton" style="margin-top: 20px; 
+                                    padding: 10px 150px;
+                                    margin-bottom: 20px;
+                                    border-width: 2px;
+                                    background-color: transparent;">
+            ▶ 
+        </button>
+        
+        <audio id="songAudio">
+            <source src="assets/perfect_man.mp3" type="audio/mpeg">
+        </audio>
+
+        <div>
+            <input 
+                type="text"
+                id="songGuess"
+                placeholder="Whats the name of the song?"
+                onkeydown="if(event.key === 'Enter') checkGuess()"
+                style="display: block; margin: 0 auto;
+                        border-width: 2px;
+                        border-color: black;
+                        border-radius: 0;
+                        background-color: transparent;
+                        font: bold;"
+                        
+                >
+        </div>
+        <div id="result" style="
+                                margin-top: 10px;
+                                font-weight: bold;
+                                min-height: 24px;">
+                                </div>
+
+        <script>
+                    const songs = [
+            {
+                title: "Perfect Man",
+                audio: "assets/perfect_man.mp3",
+                image: "assets/man.png"
+            },
+            {
+                title: "All Eyez on Me",
+                audio: "assets/pac_song.mp3",
+                image: "assets/2pac.png"
+            },
+            {
+                title: "Vou Descer Minha Favela de Nave",
+                audio: "assets/nunca_tenha.mp3",
+                image: "assets/nunca.png"
+            }
+        ];
+
+
+
+            const playButton = document.getElementById('playButton');
+            const timerDisplay = document.querySelector('.timer');
+            const audio = document.getElementById('songAudio');
+            const currentSong = songs[Math.floor(Math.random() * songs.length)];
+
+
+            let startTime;
+            let elapsedTime = 0;
+            let timerInterval;
+            let isPlaying = false;
+            let isSongPlaying = false;
+            
+            audio.volume = 1.0
+            audio.preload = 'audio'
+
+            document.querySelector('img').src = currentSong.image;
+            document.querySelector('p').textContent = currentSong.title;
+            document.getElementById('songAudio').innerHTML = `<source src="${currentSong.audio}" type="audio/mpeg">`;
+            // Format time as S.sss
+            function formatTime(ms) {
+                return (ms / 1000).toFixed(3) + 's';
+            }
+    
+            function updateTimer() {
+                const currentTime = Date.now();
+                elapsedTime = currentTime - startTime;
+                timerDisplay.textContent = formatTime(elapsedTime);
+            }
+    
+            playButton.addEventListener('click', () => {
+            if (!isSongPlaying) {
+                // Start audio and timer
+                audio.play();
+                startTime = Date.now() - elapsedTime;
+                timerInterval = setInterval(updateTimer, 10);
+                playButton.textContent = '❚❚';
+            } else {
+                // Pause audio and timer
+                audio.pause();
+                clearInterval(timerInterval);
+                playButton.textContent = '▶';
+            }
+            isSongPlaying = !isSongPlaying;
+        });
+
+        
+            const input = document.getElementById('songGuess');
+
+            input.addEventListener('focus', () => {
+                input.removeAttribute('placeholder');
+            });
+
+            input.addEventListener('blur', () => {
+                if (!input.value) {
+                    input.setAttribute('placeholder', 'Whats the name of the song?');
+                }
+            })
+
+        // Sanitization function
+            function sanitizeString(str) {
+                return str.toLowerCase()
+                        .replace(/[^\w\s]/g, '')
+                        .replace(/\s+/g, ' ')
+                        .trim();
+}
+
+// Check guess
+            document.getElementById('songGuess').addEventListener('input', (e) => {
+                const userGuess = e.target.value.toLowerCase().replace(/[^\w\s]/g, '').trim();
+                const correctSong = document.querySelector('p').textContent.toLowerCase().replace(/[^\w\s]/g, '').trim();
+            
+            if (userGuess === correctSong) {
+                clearInterval(timerInterval);
+                document.getElementById('result').textContent = `🎉 Correct! Time: ${timerDisplay.textContent}`;
+                                // BRUTALIST UNBLUR (no classes)
+                document.querySelector('img').style.filter = 'none';
+                document.querySelector('p').style.filter = 'none';
+            
+            }
+        });
+
+        </script>
+    </div>
+
+</body>
+</html>
