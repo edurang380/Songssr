@@ -1,0 +1,75 @@
+body {
+    font-family: Arial, sans-serif;
+    background: #f0f0f0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+.game-container {
+    text-align: center;
+    width: 300px;
+}
+
+/* Blurred Album Art */
+.album-art {
+    width: 250px;
+    height: 250px;
+    margin: 0 auto 20px;
+    overflow: hidden;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.album-art img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.blurred {
+    filter: blur(10px);
+    user-select: none; /* Prevents text selection */
+}
+
+/* Blurred Song Title */
+.song-title {
+    font-size: 24px;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+/* Progress Bar (Spotify Style) */
+.progress-bar {
+    width: 100%;
+    height: 4px;
+    background: #ddd;
+    border-radius: 2px;
+    margin-bottom: 20px;
+    overflow: hidden;
+}
+
+.progress {
+    width: 30%; /* Adjust dynamically with JS later */
+    height: 100%;
+    background: #1DB954; /* Spotify green */
+}
+
+/* Play Button */
+.play-button {
+    width: 100%;
+    padding: 15px;
+    background: #1DB954;
+    color: white;
+    border: none;
+    border-radius: 30px;
+    font-size: 18px;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.play-button:hover {
+    transform: scale(1.05);
+}
