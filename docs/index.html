@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Guess the Song</title>
+    <!-- No external CSS or JS -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 50px;
+        }
+        .timer {
+            font-size: 24px;
+            margin: 10px 0;
+            font-family: monospace; /* For consistent digit width */
+        }
+        button {
+            padding: 10px 30px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        input {
+            padding: 10px;
+            font-size: 16px;
+            width: 300px;
+            text-align: center;
+            margin-top: 10px;
+        }
+        #songGuess::placeholder{
+            font-family: Arial, sans-serif; /* Monospace font */
+            color: #000000; /* Light red/pink */
+            opacity: 1; /* Full visibility (no fade) */
+            font-style: bold;
+        }
+
+    </style>
+</head>
+<body style="background-color:antiquewhite">
+    <div style="text-align: center; margin-top: 50px;">
+        <!-- Blurred Image (using HTML-only hack) -->
+        <img id="albumArt"
+            style="filter: blur(5px); width: 200px; height: 200px;" 
+            alt="Blurred album cover"
+        >
+
+        <!-- Blurred Song Title (inline CSS) -->
+        <p id="songTitle" style="font-size: 20px; margin: 10px 0; filter:blur(5px)">
+            Loading Song ...
+        </p>
+
+        <!-- Timer display -->
+        <div class="timer">0.000s</div>
+
+
+
+        <!-- Play Button (default browser style) -->
+        <button id="playButton" style="margin-top: 20px; 
+                                    padding: 10px 150px;
+                                    margin-bottom: 20px;
+                                    border-width: 2px;
+                                    background-color: transparent;">
+            ▶ 
+        </button>
+        
+        
+
+        <div>
+            <input 
+                type="text"
+                id="songGuess"
+                placeholder="Whats the name of the song?"
+                onkeydown="if(event.key === 'Enter') checkGuess()"
+                style="display: block; margin: 0 auto;
+                        border-width: 2px;
+                        border-color: black;
+                        border-radius: 0;
+                        background-color: transparent;
+                        font: bold;"
+                        
+                >
+        </div>
+        <div id="result" style="
+                                margin-top: 10px;
+                                font-weight: bold;
+                                min-height: 24px;">
+                                </div>
+        <div id="spotifyPlayer"></div>
+        <script>
+            // ====== SPOTIFY CONFIG ======
+            const CLIENT_ID = '121cd475640148ac87d0e232ca8f5925'; // Public ID is okay
+            const BACKEND_URL = "https://spotify-auth-backend.onrender.com"; // url for back end
+            const songs = [
+                '3n3Ppam7vgaVa1iaRUc9Lp', // Mr. Brightside
+                '5Q0Nhxo0l2bP3pNjpGJwV1', // Sweet Child O' Mine
+                '7GhIk7Il098yCjg4BQjzvb'  // Take On Me
+            ];
+    
+            // ====== GAME STATE ======
+            let startTime, elapsedTime = 0, timerInterval, isSongPlaying = false;
+    
+            // ====== SPOTIFY FUNCTIONS ======
+            async function getSpotifyToken() {
+                const response = await fetch(`${BACKEND_URL}/api/token`); // Use the constant here
+                if (!response.ok) throw new Error("Failed to get token");
+                return (await response.json()).token;
+            }
+
+            async function loadRandomSong() {
+                const token = await getSpotifyToken();
+                const trackId = songs[Math.floor(Math.random() * songs.length)];
+  
+                const response = await fetch(`https://api.spotify.com/v1/tracks/${trackId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+  
+                document.getElementById('albumArt').src = data.album.images[0].url;
+                document.getElementById('songTitle').textContent = `${data.name} - ${data.artists[0].name}`;
+  
+                document.getElementById('spotifyPlayer').innerHTML = `
+                    <iframe src="https://open.spotify.com/embed/track/${trackId}?autoplay=0" 
+                    style="display:none"
+                    allow="encrypted-media"></iframe>
+                    `;
+            }
+    
+            // ====== GAME FUNCTIONS ======
+            function formatTime(ms) {
+                return (ms / 1000).toFixed(3) + 's';
+            }
+    
+            function updateTimer() {
+                elapsedTime = Date.now() - startTime;
+                document.querySelector('.timer').textContent = formatTime(elapsedTime);
+            }
+    
+            function checkGuess() {
+                const userGuess = sanitizeString(document.getElementById('songGuess').value);
+                const correctSong = sanitizeString(document.getElementById('songTitle').textContent);
+                
+                if (userGuess === correctSong) {
+                    clearInterval(timerInterval);
+                    document.getElementById('result').textContent = `🎉 Correct! Time: ${formatTime(elapsedTime)}`;
+                    document.getElementById('albumArt').style.filter = 'none';
+                    document.getElementById('songTitle').style.filter = 'none';
+                }
+            }
+    
+            function sanitizeString(str) {
+                return str.toLowerCase()
+                        .replace(/[^\w\s]/g, '')
+                        .replace(/\s+/g, ' ')
+                        .trim();
+            }
+
+            async function initGame() {
+                try {
+                    await loadRandomSong();
+                } catch (error) {
+                    console.error("Failed to initialize:", error);
+                    document.getElementById('songTitle').textContent = "Error loading song. Refresh?";
+                }
+            }
+            initGame(); // Replace the direct loadRandomSong() call at bottom
+    
+            // ====== EVENT LISTENERS ======
+            document.getElementById('playButton').addEventListener('click', () => {
+                const iframe = document.querySelector('#spotifyPlayer iframe');
+                if (iframe) iframe.contentWindow.postMessage('{"command":"toggle"}','*');
+                
+                if (!isSongPlaying) {
+                    startTime = Date.now() - elapsedTime;
+                    timerInterval = setInterval(updateTimer, 10);
+                    document.getElementById('playButton').textContent = '❚❚';
+                } else {
+                    clearInterval(timerInterval);
+                    document.getElementById('playButton').textContent = '▶';
+                }
+                isSongPlaying = !isSongPlaying;
+            });
+            
+            document.getElementById('songGuess').addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') checkGuess();
+            });
+    
+            // ====== INITIALIZE ======
+            loadRandomSong();
+        </script>
+    </div>
+
+</body>
+</html>
